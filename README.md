@@ -1,3 +1,5 @@
+[Youtube video](https://youtu.be/KojO_wjFvP8?si=YwmSWDbY8E1yVyV2)
+
 # OpenStack and Ceph Storage Guide
 
 This guide provides a comprehensive walkthrough for setting up a Ceph cluster and integrating it with OpenStack. It covers the fundamentals of Ceph, the installation of a 3-node cluster, and demonstrates key features like volume management, snapshots, cloning, and resilience.
