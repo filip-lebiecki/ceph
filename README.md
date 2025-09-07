@@ -119,10 +119,10 @@ lsblk
 # Install Ceph client utilities
 sudo apt install ceph-common
 
-# Create/edit Ceph configuration file on the client
+# Create/edit Ceph configuration file on the client (copy content from ceph1)
 # vi /etc/ceph/ceph.conf
 
-# Create/edit client admin keyring on the client
+# Create/edit client admin keyring on the client (copy content from ceph1)
 # vi /etc/ceph/ceph.client.admin.keyring
 
 # Check cluster status from the client
@@ -148,13 +148,38 @@ mount /dev/rbd0 /mnt/ceph-volume
 
 ```bash
 # Create a snapshot
-sync; fsfreeze -f /mnt; rbd snap create my-pool/my-image@my-snapshot; fsfreeze -u /mnt
+sync; fsfreeze -f /mnt/ceph-volume; rbd snap create my-pool/my-image@my-snapshot; fsfreeze -u /mnt/ceph-volume
 
 # List snapshots for an image
 rbd snap ls my-pool/my-image
 
+# Map snapshot as read-only
+rbd map my-pool/my-image@my-snapshot --read-only
+
+# Show mapped
+rbd showmapped
+
+# Mount snapshot as read-only
+mount /dev/rbd1 /mnt/ceph-snap -o ro,noload
+```
+
+### Revert snapshot
+
+```bash
+# Unmount volume
+umount /mnt/ceph-volume
+
+# Unmap volume
+rbd unmap /dev/rbd0
+
 # Rollback the image to a snapshot
 rbd snap rollback my-pool/my-image@my-snapshot
+
+# Map volume
+rbd map my-pool/my-image
+
+# Mount volume again
+mount /dev/rbd0 /mnt/ceph-volume/
 ```
 
 ### Cloning
@@ -163,13 +188,33 @@ rbd snap rollback my-pool/my-image@my-snapshot
 # Protect a snapshot
 rbd snap protect my-pool/my-image@my-snapshot
 
+# Check if snapshot exists
+rbd snap ls my-pool/my-image
+
 # Clone a snapshot to a new image
 rbd clone my-pool/my-image@my-snapshot my-pool/my-new-image
+
+# List images
+rbd ls my-pool
+
+# Map new image
+rbd map my-pool/my-new-image
+
+# Show mapped
+rbd showmapped
+
+# Mount clone
+mount /dev/rbd2 /mnt/ceph-clone
+
 ```
 
 ### Resilience Testing
 
 ```bash
+dd if=/dev/zero bs=1M count=1000 | pv -q -L 1m | dd of=/mnt/ceph-volume/slowfile
+
+watch -n1 ls -lh slowfile
+
 # Watch the Ceph cluster health
 watch -n1 ceph -s
 
@@ -182,11 +227,25 @@ cephadm unit --name osd.1 stop
 # Mark an OSD as out
 ceph osd out 1
 
-# Start an OSD
-cephadm unit --name osd.1 start
+# Stop an OSD
+cephadm unit --name osd.2 stop
 
-# Mark an OSD as in
+# Mark an OSD as out
+ceph osd out 2
+
+# Stop an OSD
+cephadm unit --name osd.4 stop
+
+# Mark an OSD as out
+ceph osd out 4
+
+# Start a OSD and bring them in
+cephadm unit --name osd.4 start
+cephadm unit --name osd.1 start
+cephadm unit --name osd.2 start
+ceph osd in 4
 ceph osd in 1
+ceph osd in 2
 ```
 
 # Check the placement group status
