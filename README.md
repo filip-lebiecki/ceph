@@ -1,4 +1,5 @@
 [Youtube video part1](https://youtu.be/KojO_wjFvP8?si=YwmSWDbY8E1yVyV2)
+
 [Youtube video part2](https://youtu.be/)
 
 # OpenStack and Ceph Storage Guide
